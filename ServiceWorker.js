@@ -1,0 +1,36 @@
+const cacheName = "Rofuclav-Rofuclav Beats Bacteria-1.0";
+const contentToCache = [
+    "Build/Slingshot.loader.js",
+    "Build/Slingshot.framework.js",
+    "Build/Slingshot.data",
+    "Build/Slingshot.wasm",
+    "TemplateData/style.css"
+
+];
+
+self.addEventListener("install", event => {
+  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(cacheName);
+    await cache.addAll(contentToCache);
+  })());
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map(key => {
+        if (key !== cacheName) return caches.delete(key);
+      })
+    );
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("fetch", event => {
+  event.respondWith((async () => {
+    const cached = await caches.match(event.request);
+    return cached || fetch(event.request);
+  })());
+});

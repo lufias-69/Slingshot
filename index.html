@@ -1,15 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-us">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Battle The Bacteria</title>
+    <title>Rofuclav Beats Bacteria</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico" />
     <link rel="stylesheet" href="TemplateData/style.css" />
+    <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width="337" height="600" tabindex="-1"></canvas>
+    <div id="unity-container">
+      <div id="desktop-warning-overlay" style="display: none">
+        <div id="desktop-warning-modal">
+          <h2>Best Experience on Phone</h2>
+          <p>
+            This game is designed for mobile play. Open it on your phone for the
+            best controls and gameplay experience.
+          </p>
+          <button id="desktop-warning-close" type="button">
+            Continue on Desktop
+          </button>
+        </div>
+      </div>
+      <canvas
+        id="unity-canvas"
+        width="337"
+        height="600"
+        tabindex="-1"
+      ></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -17,137 +35,208 @@
         </div>
       </div>
       <div id="unity-warning"></div>
-      <!-- <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Battle The Bacteria</div>
-      </div> -->
     </div>
     <script>
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var warningBanner = document.querySelector("#unity-warning");
+            (function setupDesktopWarningStyles() {
+              const style = document.createElement("style");
+              style.textContent = `
+                #desktop-warning-overlay {
+                  position: fixed;
+                  inset: 0;
+                  z-index: 9999;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: rgba(0, 0, 0, 0.68);
+                  padding: 20px;
+                  box-sizing: border-box;
+                }
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length
-            ? "block"
-            : "none";
-        }
-        var div = document.createElement("div");
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == "error") div.style = "background: red; padding: 10px;";
-        else {
-          if (type == "warning")
-            div.style = "background: yellow; padding: 10px;";
-          setTimeout(function () {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+                #desktop-warning-modal {
+                  width: min(540px, 100%);
+                  border-radius: 14px;
+                  background: #ffffff;
+                  color: #121212;
+                  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
+                  padding: 24px;
+                  font-family: Arial, sans-serif;
+                  text-align: center;
+                }
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/WebglBuild.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/WebglBuild.data",
-        frameworkUrl: buildUrl + "/WebglBuild.framework.js",
-        codeUrl: buildUrl + "/WebglBuild.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Rofuclav",
-        productName: "Battle The Bacteria",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
+                #desktop-warning-modal h2 {
+                  margin: 0 0 12px;
+                  font-size: 30px;
+                  line-height: 1.1;
+                }
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
+                #desktop-warning-modal p {
+                  margin: 0 0 18px;
+                  font-size: 18px;
+                  line-height: 1.4;
+                }
 
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
+                #desktop-warning-close {
+                  border: 0;
+                  border-radius: 10px;
+                  padding: 12px 18px;
+                  background: #0f766e;
+                  color: #ffffff;
+                  font-size: 16px;
+                  font-weight: 700;
+                  cursor: pointer;
+                }
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
+                #desktop-warning-close:hover {
+                  filter: brightness(1.08);
+                }
+              `;
+              document.head.appendChild(style);
+            })();
 
-        var meta = document.createElement("meta");
-        meta.name = "viewport";
-        meta.content =
-          "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
-        document.getElementsByTagName("head")[0].appendChild(meta);
-        container.className = "unity-mobile";
-        canvas.className = "unity-mobile";
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceRefresh = urlParams.get("refresh") === "true";
+            const refreshToken = forceRefresh ? Date.now().toString() : "";
 
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+            function appendRefreshToken(url) {
+              if (!forceRefresh) return url;
+              return url + (url.indexOf("?") === -1 ? "?" : "&") + "refresh=" + refreshToken;
+            }
 
-        canvas.style.width = "337px";
-        canvas.style.height = "600px";
-      }
+            function deleteIndexedDbSafely(dbName) {
+              return new Promise((resolve) => {
+                try {
+                  const request = indexedDB.deleteDatabase(dbName);
+                  request.onsuccess = () => resolve();
+                  request.onerror = () => resolve();
+                  request.onblocked = () => resolve();
+                } catch (_error) {
+                  resolve();
+                }
+              });
+            }
 
-      loadingBar.style.display = "block";
+            async function clearUnityOfflineData() {
+              if ("serviceWorker" in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(registrations.map((registration) => registration.unregister()));
+              }
 
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        })
-          .then((unityInstance) => {
-            loadingBar.style.display = "none";
-            /* fullscreenButton.onclick = () => {
-              unityInstance.SetFullscreen(1);
-            }; */
-          })
-          .catch((message) => {
-            alert(message);
-          });
-      };
+              if ("caches" in window) {
+                const cacheKeys = await caches.keys();
+                await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey)));
+              }
 
-      document.body.appendChild(script);
-      function resizeCanvas() {
-        let canvas = document.getElementById("unity-canvas");
-        let dvh = window.innerHeight; // Using JS as fallback for dvh
-        let vw = window.innerWidth;
-        let aspectRatio = 540 / 960;
+              if (window.indexedDB && typeof indexedDB.databases === "function") {
+                const databases = await indexedDB.databases();
+                const unityDatabases = databases
+                  .map((db) => db && db.name)
+                  .filter((name) => typeof name === "string" && /unity/i.test(name));
+                await Promise.all(unityDatabases.map((dbName) => deleteIndexedDbSafely(dbName)));
+              }
+            }
 
-        if (vw < 768) {
-          // Phone detection
-          canvas.style.width = "100vw";
-          canvas.style.height = "100dvh"; // Use dvh for better mobile fit
-        } else {
-          let newHeight = dvh;
-          let newWidth = newHeight * aspectRatio;
-          canvas.style.width = `${newWidth}px`;
-          canvas.style.height = `${newHeight}px`;
-        }
-      }
+            var container = document.querySelector("#unity-container");
+            var canvas = document.querySelector("#unity-canvas");
+            var loadingBar = document.querySelector("#unity-loading-bar");
+            var progressBarFull = document.querySelector("#unity-progress-bar-full");
+            var warningBanner = document.querySelector("#unity-warning");
+            var desktopWarningOverlay = document.querySelector("#desktop-warning-overlay");
+            var desktopWarningClose = document.querySelector("#desktop-warning-close");
 
-      window.addEventListener("resize", resizeCanvas);
-      resizeCanvas(); // Call once to set initial size
+            function isMobileBrowser() {
+              const userAgent = navigator.userAgent || "";
+              const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+              const ipadDesktopMode = /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+              return mobileUserAgent || ipadDesktopMode;
+            }
+
+            if (!isMobileBrowser()) {
+              desktopWarningOverlay.style.display = "flex";
+            }
+
+            desktopWarningClose.addEventListener("click", () => {
+              desktopWarningOverlay.style.display = "none";
+            });
+
+            // Shows a temporary message banner/ribbon for a few seconds, or
+            // a permanent error message on top of the canvas if type=='error'.
+            // If type=='warning', a yellow highlight color is used.
+            // Modify or remove this function to customize the visually presented
+            // way that non-critical warnings and error messages are presented to the
+            // user.
+            function unityShowBanner(msg, type) {
+              function updateBannerVisibility() {
+                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+              }
+              var div = document.createElement('div');
+              div.innerHTML = msg;
+              warningBanner.appendChild(div);
+              if (type == 'error') div.style = 'background: red; padding: 10px;';
+              else {
+                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+                setTimeout(function() {
+                  warningBanner.removeChild(div);
+                  updateBannerVisibility();
+                }, 5000);
+              }
+              updateBannerVisibility();
+            }
+
+            var buildUrl = "Build";
+                var loaderUrl = appendRefreshToken(buildUrl + "/Slingshot.loader.js");
+            var config = {
+                  dataUrl: appendRefreshToken(buildUrl + "/Slingshot.data"),
+                  frameworkUrl: appendRefreshToken(buildUrl + "/Slingshot.framework.js"),
+                  codeUrl: appendRefreshToken(buildUrl + "/Slingshot.wasm"),
+              streamingAssetsUrl: "StreamingAssets",
+              companyName: "Rofuclav",
+              productName: "Rofuclav Beats Bacteria",
+              productVersion: "1.0",
+              showBanner: unityShowBanner,
+            };
+
+            // By default Unity keeps WebGL canvas render target size matched with
+            // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+            // Set this to false if you want to decouple this synchronization from
+            // happening inside the engine, and you would instead like to size up
+            // the canvas DOM size and WebGL render target sizes yourself.
+            // config.matchWebGLToCanvasSize = false;
+
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+              // Mobile device style: fill the whole browser client area with the game canvas:
+              var meta = document.createElement('meta');
+              meta.name = 'viewport';
+              meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+              document.getElementsByTagName('head')[0].appendChild(meta);
+            }
+
+            canvas.style.background = "url('" + buildUrl + "/Slingshot.jpg') center / cover";
+            async function startUnity() {
+              if (forceRefresh) {
+                await clearUnityOfflineData();
+              }
+
+              if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register(appendRefreshToken("ServiceWorker.js"));
+              }
+
+              loadingBar.style.display = "block";
+
+              var script = document.createElement("script");
+              script.src = loaderUrl;
+              script.onload = () => {
+                createUnityInstance(canvas, config, (progress) => {
+                  progressBarFull.style.width = 100 * progress + "%";
+                }).then((unityInstance) => {
+                  loadingBar.style.display = "none";
+                }).catch((message) => {
+                  alert(message);
+                });
+              };
+              document.body.appendChild(script);
+            }
+
+            startUnity();
     </script>
   </body>
 </html>
